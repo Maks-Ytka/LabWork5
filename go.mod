@@ -1,3 +1,3 @@
-module github.com/niglajkin/Lab5
+module github.com/niglajkin/LabWork4
 
 go 1.24

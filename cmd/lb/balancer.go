@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/niglajkin/Lab5/httptools"
-	"github.com/niglajkin/Lab5/signal"
+	"github.com/niglajkin/LabWork4/httptools"
+	"github.com/niglajkin/LabWork4/signal"
 )
 
 var (
