@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/niglajkin/LabWork4/httptools"
-	"github.com/niglajkin/LabWork4/signal"
+	"github.com/Maks-Ytka/LabWork5/httptools"
+	"github.com/Maks-Ytka/LabWork5/signal"
 )
 
 var (
@@ -146,4 +146,4 @@ func (bc *byteCounterResponseWriter) Write(p []byte) (int, error) {
 	cnt, err := bc.ResponseWriter.Write(p)
 	bc.n += uint64(cnt)
 	return cnt, err
-} 
+}

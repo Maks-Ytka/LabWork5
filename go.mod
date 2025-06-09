@@ -1,3 +1,3 @@
-module github.com/niglajkin/LabWork4
+module github.com/Maks-Ytka/LabWork5
 
 go 1.24
