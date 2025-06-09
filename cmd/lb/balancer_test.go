@@ -12,7 +12,6 @@ import (
 )
 
 func TestBalancer_WithStubs(t *testing.T) {
-	// We’ll run two sub‐runs: one with fixed loads, one with random.
 	t.Run("Predefined", func(t *testing.T) {
 		loads := []int{80, 50, 30, 10, 100, 40, 90, 25, 60, 15}
 		runStubbedBalancer(t, loads, "Predefined")

@@ -6,7 +6,6 @@ import (
 )
 
 func mergeSegments(outputPath string, segments []*segment) (*segment, error) {
-	// Ключ → останнє значення
 	merged := make(map[string]string)
 	for _, seg := range segments {
 		for key := range seg.index {
@@ -17,7 +16,6 @@ func mergeSegments(outputPath string, segments []*segment) (*segment, error) {
 		}
 	}
 
-	// Створюємо новий сегмент
 	mergedPath := filepath.Join(filepath.Dir(outputPath), "merged-segment")
 	f, err := os.Create(mergedPath)
 	if err != nil {

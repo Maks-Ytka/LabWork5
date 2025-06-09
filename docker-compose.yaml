@@ -1,18 +1,19 @@
-networks:
-  servers:
+version: "3.8"
 
 services:
-
-  balancer:
+  db:
     build: .
-    command: "lb"
+    command: "db"
     networks:
       - servers
     ports:
-      - "8090:8090"
+      - "8079:8079"
 
   server1:
     build: .
+    command: "server --port=8080"
+    depends_on:
+      - db
     networks:
       - servers
     ports:
@@ -20,6 +21,9 @@ services:
 
   server2:
     build: .
+    command: "server --port=8080"
+    depends_on:
+      - db
     networks:
       - servers
     ports:
@@ -27,7 +31,25 @@ services:
 
   server3:
     build: .
+    command: "server --port=8080"
+    depends_on:
+      - db
     networks:
       - servers
     ports:
       - "8082:8080"
+
+  balancer:
+    build: .
+    command: "lb"
+    depends_on:
+      - server1
+      - server2
+      - server3
+    networks:
+      - servers
+    ports:
+      - "8090:8090"
+
+networks:
+  servers:

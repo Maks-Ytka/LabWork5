@@ -12,9 +12,6 @@ type entry struct {
 	key, value string
 }
 
-// 0           4    8     kl+8  kl+12     <-- offset
-// (full size) (kl) (key) (vl)  (value)
-// 4           4    ....  4     .....     <-- length
 
 func (e *entry) Encode() []byte {
 	kl, vl := len(e.key), len(e.value)

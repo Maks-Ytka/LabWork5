@@ -1,54 +1,82 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
+	"io"
+	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/Maks-Ytka/LabWork5/httptools"
 	"github.com/Maks-Ytka/LabWork5/signal"
 )
 
-var port = flag.Int("port", 8080, "server port")
+var (
+	port     = flag.Int("port", 8080, "server port")
+	teamName = "maksytka"
+)
 
-const confResponseDelaySec = "CONF_RESPONSE_DELAY_SEC"
-const confHealthFailure = "CONF_HEALTH_FAILURE"
+const dbServiceURL = "http://db:8079"
+
+type dbRecord struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+type postBody struct {
+	Value string `json:"value"`
+}
 
 func main() {
-	h := new(http.ServeMux)
+	flag.Parse()
 
-	h.HandleFunc("/health", func(rw http.ResponseWriter, r *http.Request) {
-		rw.Header().Set("content-type", "text/plain")
-		if failConfig := os.Getenv(confHealthFailure); failConfig == "true" {
-			rw.WriteHeader(http.StatusInternalServerError)
-			_, _ = rw.Write([]byte("FAILURE"))
-		} else {
-			rw.WriteHeader(http.StatusOK)
-			_, _ = rw.Write([]byte("OK"))
-		}
+	time.Sleep(3 * time.Second)
+
+	today := time.Now().Format("2006-01-02")
+	body, _ := json.Marshal(postBody{Value: today})
+	resp, err := http.Post(dbServiceURL+"/db/"+teamName, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		log.Fatalf("failed to init db with date: %v", err)
+	}
+	resp.Body.Close()
+
+	h := http.NewServeMux()
+	h.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
 	})
 
-	report := make(Report)
-
-	h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) {
-		respDelayString := os.Getenv(confResponseDelaySec)
-		if delaySec, parseErr := strconv.Atoi(respDelayString); parseErr == nil && delaySec > 0 && delaySec < 300 {
-			time.Sleep(time.Duration(delaySec) * time.Second)
+	h.HandleFunc("/api/v1/some-data", func(w http.ResponseWriter, r *http.Request) {
+		key := r.URL.Query().Get("key")
+		if key == "" {
+			http.Error(w, "missing key param", http.StatusBadRequest)
+			return
 		}
 
-		report.Process(r)
+		resp, err := http.Get(dbServiceURL + "/db/" + key)
+		if err != nil {
+			http.Error(w, "db request failed", http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
 
-		rw.Header().Set("content-type", "application/json")
-		rw.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(rw).Encode([]string{
-			"1", "2",
-		})
+		if resp.StatusCode == http.StatusNotFound {
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
+
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			http.Error(w, "db read failed", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(data)
 	})
-
-	h.Handle("/report", report)
 
 	server := httptools.CreateServer(*port, h)
 	server.Start()
